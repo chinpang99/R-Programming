@@ -26,3 +26,42 @@ regressor = lm(formula = Profit ~ .,
 
 # Predicting the Test set results
 y_pred = predict(regressor, newdata = test_set)
+
+#Building the optimal model using Backward Elimination
+
+regressor = lm(formula = Profit ~ R.D.Spend + Administration + Marketing.Spend + State,
+               data = dataset) #Not compulsory, can use training set. Just taking the whole dataset to have a clearer image of which variable is significant
+summary(regressor) # Step 2: Find and remove the variable's P-Value > SL (0.05)
+
+regressor = lm(formula = Profit ~ R.D.Spend + Administration + Marketing.Spend,
+               data = dataset) #Step 3: Remove the variable
+summary(regressor)
+
+regressor = lm(formula = Profit ~ R.D.Spend + Marketing.Spend,
+               data = dataset) #This can be identified as best team in predicting profit as Marketing Spend P-value is just 0.06
+summary(regressor)
+
+regressor = lm(formula = Profit ~ R.D.Spend,
+               data = dataset)
+summary(regressor)
+
+
+# BONUS CONTENT
+#----------------
+# Automatically Backward Elimination
+backwardElimination <- function(x, sl) { # Create a function to automatically 
+  numVars = length(x)
+  for (i in c(1:numVars)){
+    regressor = lm(formula = Profit ~ ., data = x)
+    maxVar = max(coef(summary(regressor))[c(2:numVars), "Pr(>|t|)"])
+    if (maxVar > sl){
+      j = which(coef(summary(regressor))[c(2:numVars), "Pr(>|t|)"] == maxVar)
+      x = x[, -j]
+    }
+    numVars = numVars - 1
+  }
+  return(summary(regressor))
+}
+SL = 0.05
+dataset = dataset[, c(1,2,3,4,5)]
+backwardElimination(training_set, SL)
